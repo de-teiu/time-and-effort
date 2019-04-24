@@ -1,0 +1,73 @@
+html,
+body {
+  padding: 0px;
+  margin: 0px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#result {
+  text-align: center;
+  position: fixed;
+  height: 160px;
+  max-width: 400px;
+  background: white;
+  top: calc(50% - 100px / 2);
+  z-index: -1;
+  display: none;
+  padding: 0.5em 1em;
+  font-weight: bold;
+  color: #6091d3;
+  background: #fff;
+  border: solid 3px #6091d3;
+  border-radius: 10px;
+}
+
+#tweetBtn {
+  text-align: center;
+  margin-top: 10px;
+}
+
+button {
+  padding: 0.3em 0.9em;
+  border: none;
+  display: inline-block;
+  background-color: #6091d3;
+  box-shadow: 0 6px #4063a4;
+  font-size: 100%;
+  line-height: 1;
+  color: #fff;
+  position: relative;
+  cursor: pointer;
+}
+
+.reloadBlock {
+  margin-top: 20px;
+}
+
+#reloadBtn {
+  border-radius: 0.3em;
+  box-shadow: 0 6px #4063a4;
+  top: 0;
+  transition: 0.1s box-shadow, 0.1s top;
+}
+
+#reloadBtn:hover {
+  box-shadow: 0 5px #4063a4;
+  top: 1px;
+}
+
+#reloadBtn:active {
+  background-color: #4063a4;
+  box-shadow: 0 0 #4063a4;
+  top: 6px;
+}
+
+/*# sourceMappingURL=/app.c3f9f951.css.map */
