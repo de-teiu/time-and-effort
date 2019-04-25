@@ -96756,12 +96756,6 @@ src_app = function () {
 }));
 },{"../p5":"../node_modules/p5/lib/p5.js"}],"images/clock.png":[function(require,module,exports) {
 module.exports = "/clock.903ff57b.png";
-},{}],"images/hoursLine.png":[function(require,module,exports) {
-module.exports = "/hoursLine.8fb25a52.png";
-},{}],"images/minutesLine.png":[function(require,module,exports) {
-module.exports = "/minutesLine.baff4a41.png";
-},{}],"images/secondsLine.png":[function(require,module,exports) {
-module.exports = "/secondsLine.ca7e676c.png";
 },{}],"images/mokuhyou_tassei_man.png":[function(require,module,exports) {
 module.exports = "/mokuhyou_tassei_man.8c5a209c.png";
 },{}],"images/mokuhyou_tassei_woman.png":[function(require,module,exports) {
@@ -96781,12 +96775,6 @@ require("p5/lib/addons/p5.sound");
 
 var _clock = _interopRequireDefault(require("../images/clock.png"));
 
-var _hoursLine = _interopRequireDefault(require("../images/hoursLine.png"));
-
-var _minutesLine = _interopRequireDefault(require("../images/minutesLine.png"));
-
-var _secondsLine = _interopRequireDefault(require("../images/secondsLine.png"));
-
 var _mokuhyou_tassei_man = _interopRequireDefault(require("../images/mokuhyou_tassei_man.png"));
 
 var _mokuhyou_tassei_woman = _interopRequireDefault(require("../images/mokuhyou_tassei_woman.png"));
@@ -96797,19 +96785,19 @@ var _trumpetDub = _interopRequireDefault(require("../se/trumpet-dub1.mp3"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+//import IMG_HOURS_LINE from "../images/hoursLine.png";
+//import IMG_MINUTES_LINE from "../images/minutesLine.png";
+//import IMG_SECONDS_LINE from "../images/secondsLine.png";
 var sketch = function sketch(p) {
   var PEOPLE_TYPE_MAN = "MAN";
-  var PEOPLE_TYPE_WOMAN = "WOMAN"; //画面描画用バッファ
+  var PEOPLE_TYPE_WOMAN = "WOMAN";
+  var HOURS_LINE_LENGTH = 160;
+  var MINUTES_LINE_LENGTH = 200;
+  var SECONDS_LINE_LENGTH = 230; //画面描画用バッファ
 
   var bufferedImage; //画像：時計本体
 
-  var imgClock; //画像：長針
-
-  var imgHoursLine; //画像：短針
-
-  var imgMinutesLine; //画像：秒針
-
-  var imgSecondsLine; //画像：報われマン
+  var imgClock; //画像：報われマン
 
   var imgRewardMan; //画像：報われウーマン
 
@@ -96827,13 +96815,16 @@ var sketch = function sketch(p) {
 
   var rewardCount; //報われ処理中の人物描画用配列
 
-  var rewardPeopleList; //初期化処理(画像と効果音読み込み)
+  var rewardPeopleList; //長針と短針の色
+
+  var hoursMinutesColor; //秒針の色
+
+  var secondsColor; //最後に報われた時刻(時分のみ)
+
+  var lastReward; //初期化処理(画像と効果音読み込み)
 
   p.preload = function () {
     imgClock = p.loadImage(_clock.default);
-    imgHoursLine = p.loadImage(_hoursLine.default);
-    imgMinutesLine = p.loadImage(_minutesLine.default);
-    imgSecondsLine = p.loadImage(_secondsLine.default);
     imgRewardMan = p.loadImage(_mokuhyou_tassei_man.default);
     imgRewardWoman = p.loadImage(_mokuhyou_tassei_woman.default);
     seReward = p.loadSound(_people_peopleStadiumCheer.default);
@@ -96844,11 +96835,13 @@ var sketch = function sketch(p) {
   p.setup = function () {
     p.createCanvas(p.windowWidth, p.windowHeight);
     bufferedImage = p.createGraphics(p.windowWidth, p.windowHeight);
-    bufferedImage.noStroke(); //bufferedImage.ellipseMode(p.CENTER);
-
+    bufferedImage.noStroke();
     bufferedImage.imageMode(p.CENTER);
     p.background(255);
     p.frameRate(60);
+    p.angleMode(p.DEGREES);
+    hoursMinutesColor = p.color(0, 0, 0);
+    secondsColor = p.color(255, 0, 0);
   }; //画面描画処理
 
 
@@ -96882,20 +96875,27 @@ var sketch = function sketch(p) {
 
     hours = hours % 24; //長針表示
 
-    var hoursDeg = (hours + minutes / 60) * 30;
-    p.drawHand(imgHoursLine, hoursDeg); //短針表示
+    bufferedImage.strokeWeight(20);
+    bufferedImage.stroke(hoursMinutesColor);
+    var hoursDeg = p.reviceAngle((hours + minutes / 60) * 30 - 90);
+    p.drawHand(HOURS_LINE_LENGTH, hoursDeg); //短針表示
 
-    var minutesDeg = (minutes + seconds / 60) * 6;
-    p.drawHand(imgMinutesLine, minutesDeg); //秒針表示
+    var minutesDeg = p.reviceAngle((minutes + seconds / 60) * 6 - 90);
+    p.drawHand(MINUTES_LINE_LENGTH, minutesDeg); //秒針表示
 
-    var secondsDeg = (seconds + milliSeconds / 1000) * 6;
-    p.drawHand(imgSecondsLine, secondsDeg);
+    bufferedImage.strokeWeight(10);
+    bufferedImage.stroke(secondsColor);
+    var secondsDeg = p.reviceAngle((seconds + milliSeconds / 1000) * 6 - 90);
+    p.drawHand(SECONDS_LINE_LENGTH, secondsDeg);
 
     if (hours !== 11 && hours !== 23) {
       var overlapCheckResult = p.checkOverlap(hoursDeg, minutesDeg);
 
       if (overlapCheckResult === 0 || prevCheckResult === -1 && overlapCheckResult === 1) {
-        console.log("かさなった：" + hours + ":" + minutes + ":" + seconds);
+        lastReward = {
+          hours: hours,
+          minutes: minutes
+        };
         p.initReward();
       }
 
@@ -96904,7 +96904,7 @@ var sketch = function sketch(p) {
 
     if (rewardCount > 0) {
       rewardPeopleList.forEach(function (people) {
-        bufferedImage.image(people.type === PEOPLE_TYPE_MAN ? imgRewardMan : imgRewardWoman, people.x, people.y);
+        bufferedImage.image(people.type === PEOPLE_TYPE_MAN ? imgRewardMan : imgRewardWoman, people.x + p.getRandFromRange(-2, 3), people.y + p.getRandFromRange(-2, 3));
       });
       rewardCount++;
 
@@ -96927,23 +96927,35 @@ var sketch = function sketch(p) {
     bufferedImage.resizeCanvas(p.windowWidth, p.windowHeight);
   };
   /**
+   * 角度補正
+   * (角度が必ず0～359の範囲になるようにする)
+   */
+
+
+  p.reviceAngle = function (deg) {
+    while (deg >= 360) {
+      deg -= 360;
+    }
+
+    while (deg <= -360) {
+      deg += 360;
+    }
+
+    return deg;
+  };
+  /**
    * 針を描画する
    **/
 
 
-  p.drawHand = function (img, deg) {
-    bufferedImage.push(); //回転の中心をキャンバスの中心にする
+  p.drawHand = function (len, deg) {
+    //長さと角度から針の終端座標を算出
+    var sx = bufferedImage.width / 2;
+    var sy = bufferedImage.height / 2;
+    var ex = sx + len * p.cos(deg);
+    var ey = sy + len * p.sin(deg); //描画
 
-    bufferedImage.translate(p.windowWidth / 2, p.windowHeight / 2); //角度を算出
-
-    bufferedImage.rotate(p.radians(deg)); //画像描画点を画像の中心にする
-    //p.imageMode(CENTER);
-    //画像を描画
-
-    bufferedImage.image(img, 0, 0); //画像描画点をデフォルトの設定に戻す
-    //p.imageMode(CORNER);
-
-    bufferedImage.pop();
+    bufferedImage.line(sx, sy, ex, ey);
   };
 
   p.checkOverlap = function (hoursDeg, minutesDeg) {
@@ -96968,10 +96980,10 @@ var sketch = function sketch(p) {
   p.initReward = function () {
     rewardCount = 1;
     rewardPeopleList = [];
-    var poopleCount = p.getRandFromRange(20, 40);
+    var poopleCount = p.getRandFromRange(15, 30);
 
-    while (rewardPeopleList < poopleCount) {
-      var peopleType = p.getRandFromRange(0, 1) === 0 ? PEOPLE_TYPE_MAN : PEOPLE_TYPE_WOMAN;
+    while (rewardPeopleList.length < poopleCount) {
+      var peopleType = p.getRandFromRange(0, 2) === 0 ? PEOPLE_TYPE_MAN : PEOPLE_TYPE_WOMAN;
       rewardPeopleList.push({
         type: peopleType,
         x: p.getRandFromRange(0, p.windowWidth),
@@ -96979,12 +96991,12 @@ var sketch = function sketch(p) {
       });
     }
 
-    console.log(rewardPeopleList);
+    seReward.play();
   };
 };
 
 new _p.default(sketch);
-},{"../scss/style.scss":"scss/style.scss","p5":"../node_modules/p5/lib/p5.js","p5/lib/addons/p5.sound":"../node_modules/p5/lib/addons/p5.sound.js","../images/clock.png":"images/clock.png","../images/hoursLine.png":"images/hoursLine.png","../images/minutesLine.png":"images/minutesLine.png","../images/secondsLine.png":"images/secondsLine.png","../images/mokuhyou_tassei_man.png":"images/mokuhyou_tassei_man.png","../images/mokuhyou_tassei_woman.png":"images/mokuhyou_tassei_woman.png","../se/people_people-stadium-cheer1.mp3":"se/people_people-stadium-cheer1.mp3","../se/trumpet-dub1.mp3":"se/trumpet-dub1.mp3"}],"C:/Users/tekur/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"../scss/style.scss":"scss/style.scss","p5":"../node_modules/p5/lib/p5.js","p5/lib/addons/p5.sound":"../node_modules/p5/lib/addons/p5.sound.js","../images/clock.png":"images/clock.png","../images/mokuhyou_tassei_man.png":"images/mokuhyou_tassei_man.png","../images/mokuhyou_tassei_woman.png":"images/mokuhyou_tassei_woman.png","../se/people_people-stadium-cheer1.mp3":"se/people_people-stadium-cheer1.mp3","../se/trumpet-dub1.mp3":"se/trumpet-dub1.mp3"}],"C:/Users/tekur/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -97012,7 +97024,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "1654" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "11541" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
