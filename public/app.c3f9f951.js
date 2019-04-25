@@ -96888,7 +96888,7 @@ var sketch = function sketch(p) {
     var secondsDeg = p.reviceAngle((seconds + milliSeconds / 1000) * 6 - 90);
     p.drawHand(SECONDS_LINE_LENGTH, secondsDeg);
 
-    if (hours !== 11 && hours !== 23) {
+    if (hours !== 11 && hours !== 23 && hours !== 12 && hours !== 0) {
       var overlapCheckResult = p.checkOverlap(hoursDeg, minutesDeg);
 
       if (overlapCheckResult === 0 || prevCheckResult === -1 && overlapCheckResult === 1) {
@@ -96896,6 +96896,7 @@ var sketch = function sketch(p) {
           hours: hours,
           minutes: minutes
         };
+        console.log(lastReward);
         p.initReward();
       }
 
@@ -96928,17 +96929,12 @@ var sketch = function sketch(p) {
   };
   /**
    * 角度補正
-   * (角度が必ず0～359の範囲になるようにする)
    */
 
 
   p.reviceAngle = function (deg) {
     while (deg >= 360) {
       deg -= 360;
-    }
-
-    while (deg <= -360) {
-      deg += 360;
     }
 
     return deg;
@@ -96962,9 +96958,19 @@ var sketch = function sketch(p) {
     var roundHoursDeg = Math.round(hoursDeg) % 360;
     var roundMinutesDeg = Math.round(minutesDeg) % 360;
 
-    if (roundHoursDeg > roundMinutesDeg) {
-      return -1;
+    if (roundHoursDeg < 0) {
+      roundHoursDeg += 360;
     }
+
+    if (roundMinutesDeg < 0) {
+      roundMinutesDeg += 360;
+    } //長針が短針を追い越す直前
+
+
+    if (roundHoursDeg > roundMinutesDeg && p.abs(roundHoursDeg - roundMinutesDeg) < 10) {
+      return -1;
+    } //短針と長針が丁度重なる
+
 
     if (roundHoursDeg === roundMinutesDeg) {
       return 0;
