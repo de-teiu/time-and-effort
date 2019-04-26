@@ -96760,6 +96760,8 @@ module.exports = "/clock.903ff57b.png";
 module.exports = "/mokuhyou_tassei_man.8c5a209c.png";
 },{}],"images/mokuhyou_tassei_woman.png":[function(require,module,exports) {
 module.exports = "/mokuhyou_tassei_woman.c2505a38.png";
+},{}],"images/musician_trumpet_man.png":[function(require,module,exports) {
+module.exports = "/musician_trumpet_man.a4a6179c.png";
 },{}],"se/people_people-stadium-cheer1.mp3":[function(require,module,exports) {
 module.exports = "/people_people-stadium-cheer1.5c7a3fa7.mp3";
 },{}],"se/trumpet-dub1.mp3":[function(require,module,exports) {
@@ -96779,15 +96781,14 @@ var _mokuhyou_tassei_man = _interopRequireDefault(require("../images/mokuhyou_ta
 
 var _mokuhyou_tassei_woman = _interopRequireDefault(require("../images/mokuhyou_tassei_woman.png"));
 
+var _musician_trumpet_man = _interopRequireDefault(require("../images/musician_trumpet_man.png"));
+
 var _people_peopleStadiumCheer = _interopRequireDefault(require("../se/people_people-stadium-cheer1.mp3"));
 
 var _trumpetDub = _interopRequireDefault(require("../se/trumpet-dub1.mp3"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-//import IMG_HOURS_LINE from "../images/hoursLine.png";
-//import IMG_MINUTES_LINE from "../images/minutesLine.png";
-//import IMG_SECONDS_LINE from "../images/secondsLine.png";
 var sketch = function sketch(p) {
   var PEOPLE_TYPE_MAN = "MAN";
   var PEOPLE_TYPE_WOMAN = "WOMAN";
@@ -96801,7 +96802,9 @@ var sketch = function sketch(p) {
 
   var imgRewardMan; //画像：報われウーマン
 
-  var imgRewardWoman; //効果音：報われる
+  var imgRewardWoman; //画像：トランペットマン
+
+  var imgTrumpetMan; //効果音：報われる
 
   var seReward; //効果音：１２時
 
@@ -96813,20 +96816,23 @@ var sketch = function sketch(p) {
 
   var prevCheckResult = null; //報われ処理カウンタ
 
-  var rewardCount; //報われ処理中の人物描画用配列
+  var rewardCount = 0; //報われ処理中の人物描画用配列
 
   var rewardPeopleList; //長針と短針の色
 
   var hoursMinutesColor; //秒針の色
 
-  var secondsColor; //最後に報われた時刻(時分のみ)
+  var secondsColor; //最後に報われた時
 
-  var lastReward; //初期化処理(画像と効果音読み込み)
+  var lastRewardHours; //日付変更処理カウンタ
+
+  var newDayCount = 0; //初期化処理(画像と効果音読み込み)
 
   p.preload = function () {
     imgClock = p.loadImage(_clock.default);
     imgRewardMan = p.loadImage(_mokuhyou_tassei_man.default);
     imgRewardWoman = p.loadImage(_mokuhyou_tassei_woman.default);
+    imgTrumpetMan = p.loadImage(_musician_trumpet_man.default);
     seReward = p.loadSound(_people_peopleStadiumCheer.default);
     seTwelve = p.loadSound(_trumpetDub.default);
   }; //初期化処理(画面描画設定など)
@@ -96838,7 +96844,7 @@ var sketch = function sketch(p) {
     bufferedImage.noStroke();
     bufferedImage.imageMode(p.CENTER);
     p.background(255);
-    p.frameRate(60);
+    p.frameRate(30);
     p.angleMode(p.DEGREES);
     hoursMinutesColor = p.color(0, 0, 0);
     secondsColor = p.color(255, 0, 0);
@@ -96888,19 +96894,31 @@ var sketch = function sketch(p) {
     var secondsDeg = p.reviceAngle((seconds + milliSeconds / 1000) * 6 - 90);
     p.drawHand(SECONDS_LINE_LENGTH, secondsDeg);
 
-    if (hours !== 11 && hours !== 23 && hours !== 12 && hours !== 0) {
+    if (hours !== 11 && hours !== 23 && hours !== 12 && hours !== 0 && lastRewardHours !== hours) {
       var overlapCheckResult = p.checkOverlap(hoursDeg, minutesDeg);
 
       if (overlapCheckResult === 0 || prevCheckResult === -1 && overlapCheckResult === 1) {
-        lastReward = {
-          hours: hours,
-          minutes: minutes
-        };
-        console.log(lastReward);
+        lastRewardHours = hours;
         p.initReward();
       }
 
       prevCheckResult = overlapCheckResult;
+    }
+
+    if (lastRewardHours === 10 && hours === 12 || lastRewardHours === 22 && hours === 0) {
+      //12時過ぎた
+      lastRewardHours = 0;
+      newDayCount = 1;
+      seTwelve.play();
+    }
+
+    if (newDayCount > 0) {
+      bufferedImage.image(imgTrumpetMan, bufferedImage.width / 2, bufferedImage.height / 2, imgTrumpetMan.width + p.getRandFromRange(0, 40), imgTrumpetMan.height + p.getRandFromRange(0, 40));
+      newDayCount++;
+
+      if (newDayCount >= 150) {
+        newDayCount = 0;
+      }
     }
 
     if (rewardCount > 0) {
@@ -97002,7 +97020,7 @@ var sketch = function sketch(p) {
 };
 
 new _p.default(sketch);
-},{"../scss/style.scss":"scss/style.scss","p5":"../node_modules/p5/lib/p5.js","p5/lib/addons/p5.sound":"../node_modules/p5/lib/addons/p5.sound.js","../images/clock.png":"images/clock.png","../images/mokuhyou_tassei_man.png":"images/mokuhyou_tassei_man.png","../images/mokuhyou_tassei_woman.png":"images/mokuhyou_tassei_woman.png","../se/people_people-stadium-cheer1.mp3":"se/people_people-stadium-cheer1.mp3","../se/trumpet-dub1.mp3":"se/trumpet-dub1.mp3"}],"C:/Users/tekur/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"../scss/style.scss":"scss/style.scss","p5":"../node_modules/p5/lib/p5.js","p5/lib/addons/p5.sound":"../node_modules/p5/lib/addons/p5.sound.js","../images/clock.png":"images/clock.png","../images/mokuhyou_tassei_man.png":"images/mokuhyou_tassei_man.png","../images/mokuhyou_tassei_woman.png":"images/mokuhyou_tassei_woman.png","../images/musician_trumpet_man.png":"images/musician_trumpet_man.png","../se/people_people-stadium-cheer1.mp3":"se/people_people-stadium-cheer1.mp3","../se/trumpet-dub1.mp3":"se/trumpet-dub1.mp3"}],"C:/Users/tekur/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -97030,7 +97048,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "11541" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "1333" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

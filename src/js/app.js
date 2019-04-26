@@ -2,11 +2,9 @@ import "../scss/style.scss";
 import P5 from "p5";
 import "p5/lib/addons/p5.sound";
 import IMG_CLOCK from "../images/clock.png";
-//import IMG_HOURS_LINE from "../images/hoursLine.png";
-//import IMG_MINUTES_LINE from "../images/minutesLine.png";
-//import IMG_SECONDS_LINE from "../images/secondsLine.png";
 import IMG_REWARD_MAN from "../images/mokuhyou_tassei_man.png";
 import IMG_REWARD_WOMAN from "../images/mokuhyou_tassei_woman.png";
+import IMG_TRUMPED_MAN from "../images/musician_trumpet_man.png";
 import SE_REWARD from "../se/people_people-stadium-cheer1.mp3";
 import SE_TWELVE from "../se/trumpet-dub1.mp3";
 
@@ -24,6 +22,8 @@ const sketch = p => {
     let imgRewardMan;
     //画像：報われウーマン
     let imgRewardWoman;
+    //画像：トランペットマン
+    let imgTrumpetMan;
     //効果音：報われる
     let seReward;
     //効果音：１２時
@@ -35,15 +35,17 @@ const sketch = p => {
     //前フレームの長針短針重なり判定の結果を保持しておく
     let prevCheckResult = null;
     //報われ処理カウンタ
-    let rewardCount;
+    let rewardCount = 0;
     //報われ処理中の人物描画用配列
     let rewardPeopleList;
     //長針と短針の色
     let hoursMinutesColor;
     //秒針の色
     let secondsColor;
-    //最後に報われた時刻(時分のみ)
-    let lastReward;
+    //最後に報われた時
+    let lastRewardHours;
+    //日付変更処理カウンタ
+    let newDayCount = 0;
 
 
     //初期化処理(画像と効果音読み込み)
@@ -51,7 +53,7 @@ const sketch = p => {
         imgClock = p.loadImage(IMG_CLOCK);
         imgRewardMan = p.loadImage(IMG_REWARD_MAN);
         imgRewardWoman = p.loadImage(IMG_REWARD_WOMAN);
-
+        imgTrumpetMan = p.loadImage(IMG_TRUMPED_MAN);
         seReward = p.loadSound(SE_REWARD);
         seTwelve = p.loadSound(SE_TWELVE);
     };
@@ -63,7 +65,7 @@ const sketch = p => {
         bufferedImage.noStroke();
         bufferedImage.imageMode(p.CENTER);
         p.background(255);
-        p.frameRate(60);
+        p.frameRate(30);
         p.angleMode(p.DEGREES);
         hoursMinutesColor = p.color(0, 0, 0);
         secondsColor = p.color(255, 0, 0);
@@ -116,17 +118,28 @@ const sketch = p => {
         p.drawHand(SECONDS_LINE_LENGTH, secondsDeg);
 
 
-        if (hours !== 11 && hours !== 23 && hours !== 12 && hours !== 0) {
+        if (hours !== 11 && hours !== 23 && hours !== 12 && hours !== 0 && lastRewardHours !== hours) {
             const overlapCheckResult = p.checkOverlap(hoursDeg, minutesDeg);
             if (overlapCheckResult === 0 || (prevCheckResult === -1 && overlapCheckResult === 1)) {
-                lastReward = {
-                    hours: hours,
-                    minutes: minutes
-                }
-                console.log(lastReward);
+                lastRewardHours = hours;
                 p.initReward();
             }
             prevCheckResult = overlapCheckResult;
+        }
+
+        if ((lastRewardHours === 10 && hours === 12) || (lastRewardHours === 22 && hours === 0)) {
+            //12時過ぎた
+            lastRewardHours = 0;
+            newDayCount = 1;
+            seTwelve.play();
+        }
+        if (newDayCount > 0) {
+            bufferedImage.image(imgTrumpetMan, bufferedImage.width / 2, bufferedImage.height / 2,
+                imgTrumpetMan.width + p.getRandFromRange(0, 40), imgTrumpetMan.height + p.getRandFromRange(0, 40));
+            newDayCount++;
+            if (newDayCount >= 150) {
+                newDayCount = 0;
+            }
         }
 
         if (rewardCount > 0) {
