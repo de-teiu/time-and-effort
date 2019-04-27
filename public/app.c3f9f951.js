@@ -96826,7 +96826,9 @@ var sketch = function sketch(p) {
 
   var lastRewardHours; //日付変更処理カウンタ
 
-  var newDayCount = 0; //初期化処理(画像と効果音読み込み)
+  var newDayCount = 0; //画像の拡大率
+
+  var magnification = 1.0; //初期化処理(画像と効果音読み込み)
 
   p.preload = function () {
     imgClock = p.loadImage(_clock.default);
@@ -96841,6 +96843,7 @@ var sketch = function sketch(p) {
   p.setup = function () {
     p.createCanvas(p.windowWidth, p.windowHeight);
     bufferedImage = p.createGraphics(p.windowWidth, p.windowHeight);
+    p.setMagnification();
     bufferedImage.noStroke();
     bufferedImage.imageMode(p.CENTER);
     p.background(255);
@@ -96855,7 +96858,7 @@ var sketch = function sketch(p) {
     //背景描画(前フレームの描画内容を塗りつぶす)
     bufferedImage.background(200); //時計描画
 
-    bufferedImage.image(imgClock, p.windowWidth / 2, p.windowHeight / 2); //画面長押しで時を加速させる
+    p.drawResizedImage(bufferedImage, imgClock, p.windowWidth / 2, p.windowHeight / 2); //画面長押しで時を加速させる
 
     if (p.mouseIsPressed) {
       mousePressedTime++;
@@ -96881,7 +96884,7 @@ var sketch = function sketch(p) {
 
     hours = hours % 24; //長針表示
 
-    bufferedImage.strokeWeight(20);
+    bufferedImage.strokeWeight(20 * magnification);
     bufferedImage.stroke(hoursMinutesColor);
     var hoursDeg = p.reviceAngle((hours + minutes / 60) * 30 - 90);
     p.drawHand(HOURS_LINE_LENGTH, hoursDeg); //短針表示
@@ -96889,7 +96892,7 @@ var sketch = function sketch(p) {
     var minutesDeg = p.reviceAngle((minutes + seconds / 60) * 6 - 90);
     p.drawHand(MINUTES_LINE_LENGTH, minutesDeg); //秒針表示
 
-    bufferedImage.strokeWeight(10);
+    bufferedImage.strokeWeight(10 * magnification);
     bufferedImage.stroke(secondsColor);
     var secondsDeg = p.reviceAngle((seconds + milliSeconds / 1000) * 6 - 90);
     p.drawHand(SECONDS_LINE_LENGTH, secondsDeg);
@@ -96913,7 +96916,7 @@ var sketch = function sketch(p) {
     }
 
     if (newDayCount > 0) {
-      bufferedImage.image(imgTrumpetMan, bufferedImage.width / 2, bufferedImage.height / 2, imgTrumpetMan.width + p.getRandFromRange(0, 40), imgTrumpetMan.height + p.getRandFromRange(0, 40));
+      p.drawResizedImage(bufferedImage, imgTrumpetMan, bufferedImage.width / 2, bufferedImage.height / 2, imgTrumpetMan.width + p.getRandFromRange(0, 40), imgTrumpetMan.height + p.getRandFromRange(0, 40));
       newDayCount++;
 
       if (newDayCount >= 150) {
@@ -96923,7 +96926,7 @@ var sketch = function sketch(p) {
 
     if (rewardCount > 0) {
       rewardPeopleList.forEach(function (people) {
-        bufferedImage.image(people.type === PEOPLE_TYPE_MAN ? imgRewardMan : imgRewardWoman, people.x + p.getRandFromRange(-2, 3), people.y + p.getRandFromRange(-2, 3));
+        p.drawResizedImage(bufferedImage, people.type === PEOPLE_TYPE_MAN ? imgRewardMan : imgRewardWoman, people.x + p.getRandFromRange(-2, 3), people.y + p.getRandFromRange(-2, 3));
       });
       rewardCount++;
 
@@ -96942,8 +96945,26 @@ var sketch = function sketch(p) {
 
   p.windowResized = function () {
     //変更されたウィンドウサイズに合わせてキャンバスのサイズを更新
+    p.updateCanvasSize();
+  };
+  /**
+   * キャンバスサイズ更新
+   */
+
+
+  p.updateCanvasSize = function () {
     p.resizeCanvas(p.windowWidth, p.windowHeight);
     bufferedImage.resizeCanvas(p.windowWidth, p.windowHeight);
+    p.setMagnification();
+  };
+
+  p.setMagnification = function () {
+    //画面サイズに合わせて描画する画像の拡大率を指定
+    var shorterWindowSize = p.windowWidth < p.windowHeight ? p.windowWidth : p.windowHeight;
+
+    if (shorterWindowSize < imgClock.width) {
+      magnification = shorterWindowSize / imgClock.width;
+    }
   };
   /**
    * 角度補正
@@ -96966,11 +96987,15 @@ var sketch = function sketch(p) {
     //長さと角度から針の終端座標を算出
     var sx = bufferedImage.width / 2;
     var sy = bufferedImage.height / 2;
-    var ex = sx + len * p.cos(deg);
-    var ey = sy + len * p.sin(deg); //描画
+    var ex = sx + len * magnification * p.cos(deg);
+    var ey = sy + len * magnification * p.sin(deg); //描画
 
     bufferedImage.line(sx, sy, ex, ey);
   };
+  /**
+   * 針追い越し判定
+   */
+
 
   p.checkOverlap = function (hoursDeg, minutesDeg) {
     var roundHoursDeg = Math.round(hoursDeg) % 360;
@@ -96996,10 +97021,31 @@ var sketch = function sketch(p) {
 
     return 1;
   };
+  /**
+   * 乱数取得(min～max(max含まず))
+   */
+
 
   p.getRandFromRange = function (min, max) {
     return Math.floor(p.random(max - min)) + min;
   };
+  /**
+   * 画像をサイズ調整して描画
+   */
+
+
+  p.drawResizedImage = function (baseImage, targetImage, x, y, width, height) {
+    if (width && height) {
+      baseImage.image(targetImage, x, y, width * magnification, height * magnification);
+      return;
+    }
+
+    baseImage.image(targetImage, x, y, targetImage.width * magnification, targetImage.height * magnification);
+  };
+  /**
+   * 報われ処理初期化
+   */
+
 
   p.initReward = function () {
     rewardCount = 1;
@@ -97048,7 +97094,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "1333" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "5969" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
