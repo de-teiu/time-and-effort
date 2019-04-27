@@ -48,6 +48,8 @@ const sketch = p => {
     let newDayCount = 0;
     //画像の拡大率
     let magnification = 1.0;
+    //音声初期化フラグ(iOS対策)
+    let isInitSE = false;
 
 
     //初期化処理(画像と効果音読み込み)
@@ -167,6 +169,22 @@ const sketch = p => {
         //変更されたウィンドウサイズに合わせてキャンバスのサイズを更新
         p.updateCanvasSize();
     };
+
+    /**
+     * 画面タッチ時、1度だけ無音で効果音を再生する
+     * (iOS対策)
+     */
+    p.touchStarted = () => {
+        if (isInitSE) {
+            return;
+        }
+        p.setVolume(0.0);
+        seReward.play();
+        p.setVolume(1.0);
+        seReward.stop();
+        isInitSE = true;
+    }
+
     /**
      * キャンバスサイズ更新
      */

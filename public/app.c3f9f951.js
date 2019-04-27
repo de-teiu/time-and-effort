@@ -96828,7 +96828,9 @@ var sketch = function sketch(p) {
 
   var newDayCount = 0; //画像の拡大率
 
-  var magnification = 1.0; //初期化処理(画像と効果音読み込み)
+  var magnification = 1.0; //音声初期化フラグ(iOS対策)
+
+  var isInitSE = false; //初期化処理(画像と効果音読み込み)
 
   p.preload = function () {
     imgClock = p.loadImage(_clock.default);
@@ -96946,6 +96948,23 @@ var sketch = function sketch(p) {
   p.windowResized = function () {
     //変更されたウィンドウサイズに合わせてキャンバスのサイズを更新
     p.updateCanvasSize();
+  };
+  /**
+   * 画面タッチ時、1度だけ無音で効果音を再生する
+   * (iOS対策)
+   */
+
+
+  p.touchStarted = function () {
+    if (isInitSE) {
+      return;
+    }
+
+    p.setVolume(0.0);
+    seReward.play();
+    p.setVolume(1.0);
+    seReward.stop();
+    isInitSE = true;
   };
   /**
    * キャンバスサイズ更新
@@ -97094,7 +97113,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "5969" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "9821" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
