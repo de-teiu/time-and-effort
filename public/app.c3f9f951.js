@@ -96960,9 +96960,7 @@ var sketch = function sketch(p) {
       return;
     }
 
-    p.setVolume(0.0);
     seReward.play();
-    p.setVolume(1.0);
     seReward.stop();
     isInitSE = true;
   };
